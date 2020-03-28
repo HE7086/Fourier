@@ -1,6 +1,6 @@
-SRC := Main.hs
+SRC := src/Main.hs src/Form.hs src/Jsonparser.hs src/Settings.hs
 BIN := Main
-FLAGS := -O2 -threaded -Wno-deprecations -dynamic
+FLAGS := -O2 -threaded -Wno-deprecations
 SRCPATH := $(PWD)/data
 OUTPATH := $(PWD)/out
 
@@ -10,7 +10,7 @@ all:
 	ghc $(FLAGS) $(SRC) -o $(BIN)
 
 clean: 
-	rm -f $(BIN) $(BIN).o $(BIN).hi README.pdf
+	rm -f $(BIN) src/*.o src/*.hi README.pdf
 
 doc:
 	pandoc -s -o README.pdf README.md
