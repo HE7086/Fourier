@@ -1,30 +1,16 @@
-{-# LANGUAGE DeriveGeneric, DeriveAnyClass, OverloadedStrings, LambdaCase #-}
-
 module Main where
 
 import           Codec.Picture
 import           Codec.Picture.Types
 import           Data.List (take)
-import           Data.Char
-import           Data.Complex
-import           Data.Aeson hiding (Series)
-import qualified Data.Aeson.Types as T
-import           Data.Attoparsec hiding (take)
-import           Data.ByteString (pack)
-import           GHC.Generics
 import           GHC.ST
-import           Control.Arrow
 import           Control.Monad
 import           System.Environment
 import           System.Directory
 
-import Jsonparser
-import Form
-import Settings
---
--- import           Codec.Picture.Drawing
--- import           Control.Monad.ST
--- import           Control.Monad.Primitive
+import           Jsonparser
+import           Form
+import           Settings
 
 main :: IO ()
 main = do
