@@ -1,13 +1,18 @@
 # Simple Fun Fourier Drawing Programm
 
+### Note
+
+This is oringinally a program for the __Functional Programming Competition__ and is under refactor  
+see details about the competition here: [Link](http://www21.in.tum.de/teaching/fpv/WS1920/wettbewerb.html)
+
 ### Inspiration
 
 * 3Blue1Brwon's amazing [**video**](https://www.youtube.com/watch?v=r6sGWTCMz2k) about fourier series
 * Fourier Series can draw anything!
 * In the form of Integral, the series will approach the oringinal image as the number of terms rise
-$$
-f(t) = \int_{0}^{1}c_{n}e^{2i\pi n * t} dt
-$$
+
+<img src="https://render.githubusercontent.com/render/math?math=f(t) = \int_{0}^{1}c_{n}e^{2i\pi n * t} dt">
+
 * The Mathematical Pinciple behind the image is just amazing
 
 ### Data Format
@@ -17,7 +22,7 @@ $$
 {
     "series": [
         {
-            "n" : 0,
+            "number" : 0,
             "real" : 1,
             "imag" : 2 
         }

@@ -2,7 +2,6 @@ module Main where
 
 import           Codec.Picture
 import           Codec.Picture.Types
-import           Data.List (take)
 import           GHC.ST
 import           Control.Monad
 import           System.Environment
