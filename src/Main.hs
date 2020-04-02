@@ -7,9 +7,65 @@ import           Control.Monad
 import           System.Environment
 import           System.Directory
 
+import           Optparser
 import           Jsonparser
 import           Form
 import           Settings
+
+version :: String
+version = "0.1.0.0"
+
+main2 :: IO ()
+main2 = do
+    (opt,non) <- parseArgs =<< getArgs
+    case opt of
+      Options {optMode = Version} -> printVersion
+      Options {optMode = Help} -> printHelp
+      Options {optMode = Gif, optInput = input, optOutput = output} -> genGif input output
+      Options {optMode = Png, optInput = input, optOutput = output} -> genPng input output
+
+printVersion :: IO ()
+printVersion = putStrLn $ "Simple Fun Fourier Drawing Program, version: " ++ version
+
+printHelp :: IO ()
+printHelp = do
+    name <- getProgName
+    putStrLn
+        $ "usage: " ++ name ++ " <options>\n"
+        ++ "available options:\n"
+        ++ "-g --gif     set filetype as gif\n"
+        ++ "-p --png     set filetype as png\n"
+        ++ "-i --input   set input file/dirpath\n"
+        ++ "-o --output  set output file/dirpath\n"
+        ++ "-v --version print program version\n"
+        ++ "-h --help    print this help\n"
+
+genGif :: FilePath -> FilePath -> IO ()
+genGif input output = undefined
+
+genPng :: FilePath -> FilePath -> IO ()
+genPng input output = undefined
+
+parseFilePath :: FilePath -> FilePath -> IO [FilePath]
+parseFilePath input output = do
+    createDirectoryIfMissing True output
+    isPath <- doesPathExist input
+    isFile <- doesFileExist input
+    isDirectory <- doesDirectoryExist input
+    if not isPath 
+    then ioError (userError "filepath not exists, check your input")
+    else if isFile 
+    then return [input]
+    else if isDirectory
+    then filterM doesFileExist =<< getDirectoryContents input
+    else ioError (userError "unknown filepath, check your input")
+
+-- test :: FilePath -> IO ()
+-- test path = mapM_ ($ path)
+--     [ doesDirectoryExist >=> flip when (putStrLn "is dir")
+--     , doesFileExist >=> flip when (putStrLn "is file")
+--     , flip unless (putStrLn "not exist") <=< doesPathExist
+--     ]
 
 main :: IO ()
 main = do
@@ -80,6 +136,9 @@ generateImg xs = runST $ do
                 writePixel img (x-1) (y+1) pix
                 w $ tail ys
       in w xs
+
+combineGif :: [FilePath] -> IO (Image PixelRGB8)
+combineGif = undefined
 
 ---------- draw spinning vectors ----------
 
