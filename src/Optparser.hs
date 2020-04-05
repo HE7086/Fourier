@@ -9,13 +9,18 @@ import           Data.List
 
 data Mode = Gif | Png | Help | Version
 
-data Options = Options  { optMode       :: Mode
-                        , optInput      :: String
-                        , optOutput     :: String
+data Options = Options  { optMode      :: Mode
+                        , optInput     :: String
+                        , optOutput    :: String
+                        , optCombined  :: Bool
                         }
 
 defaultOptions :: Options
-defaultOptions = Options { optMode = Png, optInput = "", optOutput = "" }
+defaultOptions = Options { optMode     = Png
+                         , optInput    = "./data"
+                         , optOutput   = "./out"
+                         , optCombined = False
+                         }
 
 options :: [OptDescr (Options -> Options)]
 options =
@@ -27,6 +32,10 @@ options =
              ["png", "PNG", "Png"]
              (NoArg (\opt -> opt { optMode = Png }))
              "Generate png image"
+    , Option ['c', 'C']
+             ["combined"]
+             (NoArg (\opt -> opt { optCombined = False }))
+             "Combine all the image afterwards"
     , Option ['i', 'I']
              ["in", "input"]
              (ReqArg (\arg opt -> opt { optInput = arg }) "FILE")
