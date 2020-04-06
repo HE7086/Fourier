@@ -8,16 +8,13 @@ import           System.Environment
 import           System.Directory
 import           System.FilePath
 
-import           Data.Char                      ( toUpper )
+import           Data.Char                      ( toLower )
 import           Data.Either                    ( rights )
 
 import           OptParser
 import           JsonParser
 import           Form
 import           Settings
-
-version :: String
-version = "0.1.0.0"
 
 main :: IO ()
 main = do
@@ -34,22 +31,6 @@ printVersion :: IO ()
 printVersion =
     putStrLn $ "Simple Fun Fourier Drawing Program, version: " ++ version
 
-printHelp :: IO ()
-printHelp = do
-    name <- getProgName
-    putStrLn
-        $  "usage: "
-        ++ name
-        ++ " <options>\n"
-        ++ "available options:\n"
-        ++ "-g --gif      set filetype as gif\n"
-        ++ "-p --png      set filetype as png\n"
-        ++ "-c --combined combine the images afterwards\n"
-        ++ "-i --input    set input file/dirpath\n"
-        ++ "-o --output   set output file/dirpath\n"
-        ++ "-v --version  print program version\n"
-        ++ "-h --help     print this help\n"
-
 genGif :: FilePath -> FilePath -> Bool -> IO ()
 genGif input output combined = do
     files <- parseFilePath input output
@@ -63,7 +44,8 @@ genGifInternal input output = do
     let out = getOutName input output ".gif"
     case writeGifAnimation out 0 LoopingForever (generateImgAcc src) of
         Left  msg -> error $ "gif generation error: " ++ msg
-        Right _   -> putStrLn ("Saved gif at: " ++ out) >> return out
+        Right gif -> gif >> putStrLn ("Saved gif at: " ++ out) >> return out
+        --TODO: why is gif needed here to save the image?
 
 genPng :: FilePath -> FilePath -> Bool -> IO ()
 genPng input output combined = do
@@ -86,11 +68,11 @@ parseFilePath i o = do
     createDirectoryIfMissing True output
 
     input <- makeAbsolute i
-    case map toUpper $ takeExtensions input of
+    case map toLower $ takeExtensions input of
         ".json" -> return [input]
         ""      -> filterM (return . isExtensionOf ".json")
             =<< getDirectoryContents input
-        _ -> error "invalid input path"
+        _ -> error $ "invalid input path: " ++ input
 
 -- test :: FilePath -> IO ()
 -- test path = mapM_ ($ path)
@@ -139,12 +121,13 @@ combinePng :: [FilePath] -> IO ()
 combinePng files = do
     imgs' <- mapM readPng files
     let imgs = rights imgs'
+    img <- createMutableImage width height white
 
     putStrLn ""
 
 getOutName :: FilePath -> FilePath -> String -> FilePath
 getOutName input output ext =
-    replaceDirectory (replaceExtension input ext) (takeDirectory output)
+    replaceDirectory (replaceExtension input ext) output
 
 
 ---------- draw spinning vectors ----------

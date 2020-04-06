@@ -59,3 +59,8 @@ parseArgs argv = case getOpt Permute options argv of
     (o, n, []) -> return (foldl (flip id) defaultOptions o, n)
     (_, _, err) ->
         ioError (userError (concat err ++ usageInfo "Usage: " options))
+
+printHelp :: IO ()
+printHelp = do
+    name <- getProgName 
+    putStrLn $ usageInfo name options

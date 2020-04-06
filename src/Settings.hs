@@ -2,6 +2,10 @@ module Settings where
 
 import Codec.Picture
 
+{-# INLINE version #-}
+version :: String
+version = "0.1.0.0"
+
 {-# INLINE width #-}
 width :: Int
 width = 1024
