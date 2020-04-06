@@ -7,10 +7,12 @@ import           Control.Monad
 import           System.Environment
 import           System.Directory
 import           System.FilePath
-import           Data.Char (toUpper)
 
-import           Optparser
-import           Jsonparser
+import           Data.Char                      ( toUpper )
+import           Data.Either                    ( rights )
+
+import           OptParser
+import           JsonParser
 import           Form
 import           Settings
 
@@ -19,23 +21,26 @@ version = "0.1.0.0"
 
 main :: IO ()
 main = do
-    (opt,non) <- parseArgs =<< getArgs
+    (opt, non) <- parseArgs =<< getArgs
     case opt of
-      Options {optMode = Version} -> printVersion
-      Options {optMode = Help} -> printHelp
-      Options {optMode = Gif, optInput = input, optOutput = output, optCombined = combined}
-        -> genGif input output combined
-      Options {optMode = Png, optInput = input, optOutput = output, optCombined = combined}
-        -> genPng input output combined
+        Options { optMode = Version } -> printVersion
+        Options { optMode = Help }    -> printHelp
+        Options { optMode = Gif, optInput = input, optOutput = output, optCombined = combined }
+            -> genGif input output combined
+        Options { optMode = Png, optInput = input, optOutput = output, optCombined = combined }
+            -> genPng input output combined
 
 printVersion :: IO ()
-printVersion = putStrLn $ "Simple Fun Fourier Drawing Program, version: " ++ version
+printVersion =
+    putStrLn $ "Simple Fun Fourier Drawing Program, version: " ++ version
 
 printHelp :: IO ()
 printHelp = do
     name <- getProgName
     putStrLn
-        $ "usage: " ++ name ++ " <options>\n"
+        $  "usage: "
+        ++ name
+        ++ " <options>\n"
         ++ "available options:\n"
         ++ "-g --gif      set filetype as gif\n"
         ++ "-p --png      set filetype as png\n"
@@ -48,7 +53,7 @@ printHelp = do
 genGif :: FilePath -> FilePath -> Bool -> IO ()
 genGif input output combined = do
     files <- parseFilePath input output
-    outs <- mapM (`genGifInternal` output) files
+    outs  <- mapM (`genGifInternal` output) files
     when combined $ combineGif outs
 
 -- handle a file, assume is a valid json
@@ -57,13 +62,13 @@ genGifInternal input output = do
     src <- jsonToForm input
     let out = getOutName input output ".gif"
     case writeGifAnimation out 0 LoopingForever (generateImgAcc src) of
-        Left _ -> error $ "gif generation error by: " ++ out
-        Right _ -> putStrLn ("Saved gif at: " ++ out) >> return out
+        Left  msg -> error $ "gif generation error: " ++ msg
+        Right _   -> putStrLn ("Saved gif at: " ++ out) >> return out
 
 genPng :: FilePath -> FilePath -> Bool -> IO ()
 genPng input output combined = do
     files <- parseFilePath input output
-    outs <- mapM (`genPngInternal` output) files
+    outs  <- mapM (`genPngInternal` output) files
     when combined $ combinePng outs
 
 genPngInternal :: FilePath -> FilePath -> IO FilePath
@@ -82,21 +87,10 @@ parseFilePath i o = do
 
     input <- makeAbsolute i
     case map toUpper $ takeExtensions input of
-      ".json" -> return [input]
-      "" -> filterM (return . isExtensionOf ".json") =<< getDirectoryContents input
-      _ -> error "invalid input path"
-
-    -- createDirectoryIfMissing True output
-    -- isPath <- doesPathExist input
-    -- isFile <- doesFileExist input
-    -- isDirectory <- doesDirectoryExist input
-    -- if not isPath
-    --   then ioError (userError "filepath not exists, check your input")
-    --   else if isFile
-    --     then return [input]
-    --     else if isDirectory
-    --       then filterM doesFileExist =<< getDirectoryContents input
-    --       else ioError (userError "unknown filepath, check your input")
+        ".json" -> return [input]
+        ""      -> filterM (return . isExtensionOf ".json")
+            =<< getDirectoryContents input
+        _ -> error "invalid input path"
 
 -- test :: FilePath -> IO ()
 -- test path = mapM_ ($ path)
@@ -107,10 +101,10 @@ parseFilePath i o = do
 
 generateImgAcc :: [Form] -> [Image PixelRGB8]
 generateImgAcc fs = gic 1 fs
-    where gic i xs
-            | i <= len = generateImg (parseCoord (take i xs)) : gic (i + 1) xs
-            | otherwise = []
-          len = length fs
+  where
+    gic i xs | i <= len  = generateImg (parseCoord (take i xs)) : gic (i + 1) xs
+             | otherwise = []
+    len = length fs
 
 -- generateImgStep :: [(Int, Int)] -> [Image PixelRGB8]
 -- generateImgStep xs = gis 1 xs
@@ -122,28 +116,31 @@ generateImgAcc fs = gic 1 fs
 generateImg :: [(Int, Int)] -> Image PixelRGB8
 generateImg xs = runST $ do
     img <- createMutableImage width height white
-    let writePixels ys
-            | null ys = freezeImage img
-            | otherwise = do
-                let (x,y) = head ys
-                    pix = pixelArt x y
-                writePixel img x y pix
-                writePixel img x (y-1) pix
-                writePixel img (x-1) y pix
-                writePixel img (x-1) (y-1) pix
-                writePixel img x (y+1) pix
-                writePixel img (x+1) y pix
-                writePixel img (x+1) (y+1) pix
-                writePixel img (x+1) (y-1) pix
-                writePixel img (x-1) (y+1) pix
-                writePixels $ tail ys
-      in writePixels xs
+    mapM_
+        (\(x, y) -> do
+            let pix = pixelArt x y
+            writePixel img x       y       pix
+            writePixel img x       (y - 1) pix
+            writePixel img (x - 1) y       pix
+            writePixel img (x - 1) (y - 1) pix
+            writePixel img x       (y + 1) pix
+            writePixel img (x + 1) y       pix
+            writePixel img (x + 1) (y + 1) pix
+            writePixel img (x + 1) (y - 1) pix
+            writePixel img (x - 1) (y + 1) pix
+        )
+        xs
+    freezeImage img
 
 combineGif :: [FilePath] -> IO ()
 combineGif = undefined
 
 combinePng :: [FilePath] -> IO ()
-combinePng = undefined
+combinePng files = do
+    imgs' <- mapM readPng files
+    let imgs = rights imgs'
+
+    putStrLn ""
 
 getOutName :: FilePath -> FilePath -> String -> FilePath
 getOutName input output ext =

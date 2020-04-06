@@ -1,4 +1,4 @@
-module Optparser where
+module OptParser where
 
 import           System.Console.GetOpt
 import           System.Environment
@@ -59,16 +59,3 @@ parseArgs argv = case getOpt Permute options argv of
     (o, n, []) -> return (foldl (flip id) defaultOptions o, n)
     (_, _, err) ->
         ioError (userError (concat err ++ usageInfo "Usage: " options))
-
--- parseArgs :: IO Options
--- parseArgs = do
---     args <- getArgs
---     progName <- getProgName
---     let header = "Usage: " ++ progName ++ " [OPTION...]"
---     let helpMessage = usageInfo header options
---     case getOpt RequireOrder options args of
---       (opts, [], []) ->
---         case foldM (flip id) defaultOptions opts of
---           Right opts -> return opts
---           Left errorMessage -> ioError (userError (errorMessage ++ "\n" ++ helpMessage))
---       (_, _, errs) -> ioError (userError (concat errs ++ helpMessage))

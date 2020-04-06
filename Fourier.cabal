@@ -51,7 +51,7 @@ executable Fourier
   main-is:             Main.hs
 
   -- Modules included in this executable, other than Main.
-  other-modules:       Settings, Jsonparser, Optparser, Form
+  other-modules:       Settings, JsonParser, OptParser, Form
 
   -- LANGUAGE extensions used by modules in this package.
   other-extensions:    DeriveGeneric, DeriveAnyClass, OverloadedStrings, LambdaCase
