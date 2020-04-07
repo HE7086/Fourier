@@ -10,6 +10,7 @@ import           System.FilePath
 
 import           Data.Char                      ( toLower )
 import           Data.Either                    ( rights )
+import           Data.List                      ( transpose )
 
 import           OptParser
 import           JsonParser
@@ -35,16 +36,21 @@ genGif :: FilePath -> FilePath -> Bool -> IO ()
 genGif input output combined = do
     files <- parseFilePath input output
     outs  <- mapM (`genGifInternal` output) files
-    when combined $ combineGif outs
+    when combined $ do
+        saveGif (combine output "combined.gif") <$> combineGif outs
+        return ()
 
 -- handle a file, assume is a valid json
 genGifInternal :: FilePath -> FilePath -> IO FilePath
 genGifInternal input output = do
     src <- jsonToForm input
     let out = getOutName input output ".gif"
-    case writeGifAnimation out 0 LoopingForever (generateImgAcc src) of
-        Left  msg -> error $ "gif generation error: " ++ msg
-        Right gif -> gif >> putStrLn ("Saved gif at: " ++ out) >> return out
+    saveGif out (generateImgAcc src)
+
+saveGif :: FilePath -> [Image PixelRGB8] -> IO FilePath
+saveGif path imgs = case writeGifAnimation path 0 LoopingForever imgs of
+    Left  msg -> error $ "gif generation error: " ++ msg
+    Right gif -> gif >> putStrLn ("Saved gif at: " ++ path) >> return path
         --TODO: why is gif needed here to save the image?
 
 genPng :: FilePath -> FilePath -> Bool -> IO ()
@@ -75,7 +81,8 @@ parseFilePath i o = do
     case map toLower $ takeExtensions input of
         ".json" -> return [input]
         ""      -> do
-            files <- filterM (return . isExtensionOf ".json") =<< getDirectoryContents input
+            files <- filterM (return . isExtensionOf ".json")
+                =<< getDirectoryContents input
             return $ map (combine input) files
             --TODO: combine these two commands
         _ -> error $ "invalid input path: " ++ input
@@ -107,6 +114,7 @@ generateImg xs = runST $ do
     mapM_
         (\(x, y) -> do
             let pix = pixelArt x y
+            --TODO: configurable thickness
             writePixel img x       y       pix
             writePixel img x       (y - 1) pix
             writePixel img (x - 1) y       pix
@@ -120,27 +128,43 @@ generateImg xs = runST $ do
         xs
     freezeImage img
 
-combineGif :: [FilePath] -> IO ()
-combineGif = undefined
+combineGif :: [FilePath] -> IO [Image PixelRGB8]
+combineGif files = do
+    imgs' <- mapM readGifImages files
+    let imgs = map (map convertRGB8) $ rights imgs'
+    let len  = maximum $ map length imgs
+    mapM combineImageRGB8 $ transpose $ map (makeSameLength len) imgs
+
+-- in case any of the gif is too short, fill the rest part with the last frame
+makeSameLength :: Int -> [Image PixelRGB8] -> [Image PixelRGB8]
+makeSameLength len imgs = if length imgs /= len
+    then imgs ++ replicate (len - length imgs) (last imgs)
+    else imgs
+
+combineImageRGB8 :: [Image PixelRGB8] -> IO (Image PixelRGB8)
+combineImageRGB8 images = do
+    img <- createMutableImage width height white
+    mapM_
+        (\image -> do
+            let coords =
+                    [ (x, y) | x <- [0 .. width - 1], y <- [0 .. height - 1] ]
+            mapM_
+                (\(x, y) -> runST $ do
+                    let pix = pixelAt image x y
+                    if pix /= white
+                        then return $ writePixel img x y pix
+                        else mempty
+                )
+                coords
+        )
+        images
+    freezeImage img
 
 combinePng :: [FilePath] -> IO (Image PixelRGB8)
 combinePng files = do
     imgs' <- mapM readPng files
     let imgs = map convertRGB8 $ rights imgs'
-    img <- createMutableImage width height white
-    mapM_ 
-        (\image -> do
-            let coords = [(x,y) | x <- [0..width - 1], y <- [0..height - 1]]
-            mapM_ 
-                (\(x,y) -> runST $ do
-                    let pix = pixelAt image x y
-                    if pix /= white
-                       then return $ writePixel img x y pix
-                       else mempty
-                ) coords
-        )
-        imgs
-    freezeImage img
+    combineImageRGB8 imgs
 
 getOutName :: FilePath -> FilePath -> String -> FilePath
 getOutName input output ext =
