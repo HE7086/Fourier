@@ -16,9 +16,9 @@ data Options = Options  { optMode      :: Mode
                         }
 
 defaultOptions :: Options
-defaultOptions = Options { optMode     = Png
-                         , optInput    = "./data"
-                         , optOutput   = "./out"
+defaultOptions = Options { optMode     = Help
+                         , optInput    = ""
+                         , optOutput   = ""
                          , optCombined = False
                          }
 
@@ -34,7 +34,7 @@ options =
              "Generate png image"
     , Option ['c', 'C']
              ["combined"]
-             (NoArg (\opt -> opt { optCombined = False }))
+             (NoArg (\opt -> opt { optCombined = True }))
              "Combine all the image afterwards"
     , Option ['i', 'I']
              ["in", "input"]

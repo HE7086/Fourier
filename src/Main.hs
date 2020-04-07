@@ -51,7 +51,10 @@ genPng :: FilePath -> FilePath -> Bool -> IO ()
 genPng input output combined = do
     files <- parseFilePath input output
     outs  <- mapM (`genPngInternal` output) files
-    when combined $ combinePng outs
+    when combined $ do
+        let outPath = combine output "combined.png"
+        writePng outPath =<< combinePng outs
+        putStrLn $ "Saved png at: " ++ outPath
 
 genPngInternal :: FilePath -> FilePath -> IO FilePath
 genPngInternal input output = do
@@ -65,13 +68,16 @@ parseFilePath :: FilePath -> FilePath -> IO [FilePath]
 parseFilePath i o = do
     output <- makeAbsolute o
     unless (null $ takeExtensions output) $ error "invalid output path"
+    --TODO: use doesDirectoryExist instead?
     createDirectoryIfMissing True output
 
     input <- makeAbsolute i
     case map toLower $ takeExtensions input of
         ".json" -> return [input]
-        ""      -> filterM (return . isExtensionOf ".json")
-            =<< getDirectoryContents input
+        ""      -> do
+            files <- filterM (return . isExtensionOf ".json") =<< getDirectoryContents input
+            return $ map (combine input) files
+            --TODO: combine these two commands
         _ -> error $ "invalid input path: " ++ input
 
 -- test :: FilePath -> IO ()
@@ -117,25 +123,25 @@ generateImg xs = runST $ do
 combineGif :: [FilePath] -> IO ()
 combineGif = undefined
 
-combinePng :: [FilePath] -> IO ()
+combinePng :: [FilePath] -> IO (Image PixelRGB8)
 combinePng files = do
     imgs' <- mapM readPng files
-    let imgs = rights imgs'
+    let imgs = map convertRGB8 $ rights imgs'
     img <- createMutableImage width height white
-
-    putStrLn ""
+    mapM_ 
+        (\image -> do
+            let coords = [(x,y) | x <- [0..width - 1], y <- [0..height - 1]]
+            mapM_ 
+                (\(x,y) -> runST $ do
+                    let pix = pixelAt image x y
+                    if pix /= white
+                       then return $ writePixel img x y pix
+                       else mempty
+                ) coords
+        )
+        imgs
+    freezeImage img
 
 getOutName :: FilePath -> FilePath -> String -> FilePath
 getOutName input output ext =
     replaceDirectory (replaceExtension input ext) output
-
-
----------- draw spinning vectors ----------
-
--- drawVector :: PrimMonad m => MutableImage (PrimState m) PixelRGB8
---                 -> Int -> Int -> Int -> Int -> m ()
--- drawVector pic i j x y = drawLine pic i j x y black
-
--- drawVectors :: PrimMonad m => MutableImage (PrimState m) PixelRGB8
---                 [Form] -> Double -> m ()
--- drawVectors pic (x:xs) t = do
