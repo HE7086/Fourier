@@ -37,7 +37,8 @@ genGif input output combined = do
     files <- parseFilePath input output
     outs  <- mapM (`genGifInternal` output) files
     when combined $ do
-        saveGif (combine output "combined.gif") <$> combineGif outs
+        frames <- combineGif outs
+        saveGif (combine output "combined.gif") frames
         return ()
 
 -- handle a file, assume is a valid json
