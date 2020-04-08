@@ -1,16 +1,11 @@
-{-# LANGUAGE DeriveGeneric, DeriveAnyClass, OverloadedStrings, LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module JsonParser where
 
 import           Data.Aeson              hiding ( Series )
-import qualified Data.Aeson.Types              as T
-import           Data.Attoparsec         hiding ( take )
-import           Data.ByteString                ( pack )
-import           Data.Complex
-import           Data.Char                      ( ord )
-import           Data.Maybe                     ( fromMaybe )
-
-import           GHC.Generics
+import           Data.Aeson.Types               ( parseMaybe )
+import qualified Data.ByteString.Lazy          as BSL
+import           Data.Complex                   ( Complex((:+)) )
 
 import           Form
 
@@ -18,18 +13,34 @@ data Vec = Vec {
     number :: Int,
     real   :: Double,
     imag   :: Double
-} deriving (Show, Generic, ToJSON, FromJSON)
+} deriving (Show)
+
+instance ToJSON Vec where
+    toJSON (Vec number real imag) =
+        object ["number" .= number, "real" .= real, "imag" .= imag]
+
+instance FromJSON Vec where
+    parseJSON = withObject "Vec"
+        $ \v -> Vec <$> v .: "number" <*> v .: "real" <*> v .: "imag"
+
+newtype Series = Series {
+    series :: [Vec]
+} deriving (Show)
+
+instance ToJSON Series where
+    toJSON (Series series) = object ["series" .= series]
+
+instance FromJSON Series where
+    parseJSON = withObject "Series" $ \s -> Series <$> s .: "series"
+
+instance Semigroup Series where
+    (Series xs) <> (Series ys) = Series (xs <> ys)
+
+instance Monoid Series where
+    mempty = Series []
 
 convert :: Vec -> Form
 convert (Vec n r i) = form (r :+ i) n
-
-newtype Series = Series [Vec]
-    deriving (Show, Generic, ToJSON)
-
-instance FromJSON Series where
-    parseJSON = \case
-        Object o -> (o .: "series") >>= fmap Series . parseJSON
-        _        -> undefined
 
 getForm :: Series -> [Form]
 getForm (Series xs) = map convert xs
@@ -39,12 +50,10 @@ jsonToCoord path = parseCoord <$> jsonToForm path
 
 jsonToForm :: FilePath -> IO [Form]
 jsonToForm path = do
-    j <- readFile path
-    case parse json $ pack $ map (fromIntegral . ord) j of
-        Done _ v -> return $ getForm $ fromMaybe
-            (Series [])
-            (T.parseMaybe parseJSON v :: Maybe Series)
-        _ -> return []
+    json <- BSL.readFile path
+    case decode json of
+        Just js -> return $ getForm js
+        Nothing -> error $ "invalid json file: " ++ path
 
 jsonToCoords :: [FilePath] -> IO [(Int, Int)]
-jsonToCoords = foldr (mappend . jsonToCoord) $ return []
+jsonToCoords = foldr (mappend . jsonToCoord) mempty
