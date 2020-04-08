@@ -98,7 +98,7 @@ parseFilePath i o = do
 generateImgAcc :: [Form] -> [Image PixelRGB8]
 generateImgAcc fs = gic 1 fs
   where
-    gic i xs | i <= len  = generateImg (parseCoord (take i xs)) : gic (i + 1) xs
+    gic i xs | i <= len  = generateImg (formsToCoords (take i xs)) : gic (i + 1) xs
              | otherwise = []
     len = length fs
 
