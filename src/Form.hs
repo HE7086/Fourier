@@ -3,8 +3,7 @@ module Form where
 import           Data.Complex
 import           Control.Arrow
 import           Settings
-
-type Form = Double -> Complex Double
+import           Types
 
 --f(t) = c * exp(n * i * 2pi * t)
 form :: Complex Double -> Int -> Double -> Complex Double

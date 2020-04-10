@@ -46,12 +46,12 @@ maintainer:          HE7086@users.noreply.github.com
 extra-source-files:  README.md
 
 
-executable Fourier
+executable Drawer
   -- .hs or .lhs file containing the Main module.
-  main-is:             Main.hs
+  main-is:             Drawer.hs
 
   -- Modules included in this executable, other than Main.
-  other-modules:       Settings, JsonParser, OptParser, Form
+  other-modules:       Settings, JsonParser, DrawerOptParser, Form, Types
 
   -- LANGUAGE extensions used by modules in this package.
   other-extensions:    OverloadedStrings
@@ -60,9 +60,18 @@ executable Fourier
   build-depends:       base ^>=4.12.0.0, JuicyPixels ^>=3.3.5, aeson ^>=1.4.7.1, bytestring ^>=0.10.8.2, directory ^>=1.3.3.0, filepath ^>=1.4.2.1
 
   -- Directories containing source files.
-  hs-source-dirs:      src
+  hs-source-dirs:      src 
 
   -- Base language which the package is written in.
   default-language:    Haskell2010
 
   ghc-options:         -O2 -threaded
+
+executable Converter
+  main-is:             Converter.hs
+  other-modules:       Settings, JsonParser, Form, Types
+  other-extensions:    OverloadedStrings
+  build-depends:       base ^>=4.12.0.0, aeson ^>=1.4.7.1, bytestring ^>=0.10.8.2, directory ^>=1.3.3.0, filepath ^>=1.4.2.1, JuicyPixels
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  ghc-options:         -O2

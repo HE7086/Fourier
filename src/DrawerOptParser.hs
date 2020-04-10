@@ -1,4 +1,4 @@
-module OptParser where
+module DrawerOptParser where
 
 import           System.Console.GetOpt
 import           System.Environment

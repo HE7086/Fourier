@@ -12,10 +12,11 @@ import           Data.Char                      ( toLower )
 import           Data.Either                    ( rights )
 import           Data.List                      ( transpose )
 
-import           OptParser
+import           DrawerOptParser
 import           JsonParser
 import           Form
 import           Settings
+import           Types
 
 main :: IO ()
 main = do
