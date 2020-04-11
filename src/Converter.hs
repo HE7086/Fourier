@@ -42,3 +42,24 @@ vectorAvgDistance (Points ps) s@(Series vs) =
 
 sumVectors :: Series -> Double -> Complex Double
 sumVectors (Series vs) t = sum $ map (\(Vec n r i) -> form (r :+ i) n t) vs
+
+----------
+
+getLinearAverage :: Double -> Double -> Double -> Int -> Int -> Double
+getLinearAverage input x1 x2 y1 y2 = input * slope + intercept
+  where
+    slope     = fromIntegral (y2 - y1) / (x2 - x1)
+    intercept = fromIntegral y2 - slope * x2
+
+timeBetweenPoints :: Double -> PointWithTime -> PointWithTime -> Bool
+timeBetweenPoints time (PointWithTime _ t1) (PointWithTime _ t2) = 
+    floatCompare time t1 0.001 == 1 && floatCompare time t2 0.001 == -1
+
+floatCompare :: Double -> Double -> Double -> Int
+floatCompare x y tolerance = do
+    let diff = abs $ x - y
+    let mean = abs $ (x + y) / 2
+    if isNaN (diff / mean) || diff / mean < tolerance
+        then 0
+        else if x > y then 1 else -1
+

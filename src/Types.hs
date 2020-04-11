@@ -62,3 +62,19 @@ instance Semigroup Points where
 
 instance Monoid Points where
     mempty = Points []
+
+data PointWithTime = PointWithTime {
+    p :: Point,
+    t :: Double
+}
+
+addTimeInterval :: Points -> [PointWithTime]
+addTimeInterval (Points ps) = zipWith PointWithTime ps timeIntervals
+  where
+    step          = 1 / fromIntegral (length ps)
+    timeIntervals = ti [1]
+    ti [] = undefined
+    ti xs@(x : _) | x - step > 0 = (x - step) : xs
+                  | otherwise    = xs
+
+

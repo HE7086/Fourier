@@ -4,7 +4,7 @@ import Codec.Picture
 
 {-# INLINE version #-}
 version :: String
-version = "0.1.0.0"
+version = "0.1.1.0"
 
 {-# INLINE width #-}
 width :: Int
@@ -34,10 +34,6 @@ pointCount = 9999
 {-# INLINE gifStep #-}
 gifStep :: Int
 gifStep = pointCount `div` 100
-
-{-# INLINE filename #-}
-filename :: String
-filename = "out"
 
 {-# INLINE scaleFactor #-}
 scaleFactor :: Int

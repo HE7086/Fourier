@@ -33,6 +33,9 @@ see original source here: [Link](2c31d26154b3e22afb435f266e6cce97c1ab28ab)
 * `real` and `imag` represent the complex constant __Cn__ in the form, control the starting position and length of the vector
 * Then put them in one directory without other files. Each file will be transformed to a closed curve. In order to draw a image with multiple curves, you'll need the same amount of json files.
 
+### Example
+![haskell](./example/haskell.gif)
+
 ### Usage
 
 ##### Build the Binary
@@ -60,15 +63,15 @@ cabal build
 ##### Example
 * generate gifs from all the files in a directory
 ```
-cabal run -- Fourier --gif --input ./data --output ./out --combined
+cabal run -- Drawer --gif --input ./data --output ./out --combined
 ```
 * generate one png from a file
 ```
-cabal run -- Fourier --png --input ./data/1.json --output ./out
+cabal run -- Drawer --png --input ./data/1.json --output ./out
 ```
 * run with threaded mode (significantly increase performance on multicore cpus)
 ```
-cabal run -- Fourier --png --input ./data/1.json --output ./out +RTS -N
+cabal run -- Drawer --png --input ./data/1.json --output ./out +RTS -N
 ```
 
 ### Customization
@@ -79,7 +82,6 @@ cabal run -- Fourier --png --input ./data/1.json --output ./out +RTS -N
     * `pointCount` : the number of points to be painted
     * `gifStep` : how many pixels will be rendered each frame
         * warning : terrible runtime if set too small
-    * `filename` : the name of outputed image
     * `scaleFactor` : how much the final image will be scaled
 * These customization options will be merged into cli flags in the future
 
