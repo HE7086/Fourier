@@ -33,6 +33,11 @@ see original source here: [Link](2c31d26154b3e22afb435f266e6cce97c1ab28ab)
 * `real` and `imag` represent the complex constant __Cn__ in the form, control the starting position and length of the vector
 * Then put them in one directory without other files. Each file will be transformed to a closed curve. In order to draw a image with multiple curves, you'll need the same amount of json files.
 
+### Example
+![haskell](./example/haskell.gif)
+
+* this image of haskell logo is generated using data from the `data` directory
+
 ### Usage
 
 ##### Build the Binary
